@@ -7,7 +7,7 @@ const bcrypt = require('bcrypt');
 
 const PORT = 3000;
 //TODO: Update this URI to match your own MongoDB setup
-const MONGO_URI = 'mongodb://localhost:27017/keyin_test';
+const MONGO_URI = 'mongodb://localhost:27017/final-sprint';
 const app = express();
 expressWs(app);
 
