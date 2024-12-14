@@ -76,6 +76,41 @@ app.get('/signup', async (request, response) => {
     return response.render('signup', { errorMessage: null });
 });
 
+app.post("/signup", (request, response) => {
+    const username = request.body.username;
+    const email = request.body.email;
+    const newPassword = request.body.password;
+    const newID = Math.max(...USERS.map(user => user.id)) + 1;
+    const newUser = {
+        id: newID,
+        username: username,
+        email: email,
+        password: bcrypt.hashSync(newPassword, SALT_ROUNDS),
+        role: "user"
+    }
+
+    // Error messages:
+    if (USERS.find((user) => user.username === username)) {
+        return response.status(400).render("signup", {
+            error: "ERROR: Username has already been registered.",
+        });
+    } else if (USERS.find((user) => user.email === email)) {
+        return response.status(400).render("signup", {
+            error: "ERROR: Email has already been registered.",
+        });
+    }
+    
+    USERS.push(newUser)
+    console.log(USERS)
+    console.log("success");
+    response.redirect("/");
+});
+
+app.post("/logout", (request, response) => {
+    request.session.destroy();
+    response.redirect("/");
+});
+
 app.get('/dashboard', async (request, response) => {
     if (!request.session.user?.id) {
         return response.redirect('/');
