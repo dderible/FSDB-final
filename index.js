@@ -6,7 +6,7 @@ const session = require('express-session');
 const bcrypt = require('bcrypt');
 
 const PORT = 3000;
-//TODO: Update this URI to match your own MongoDB setup
+const SALT_ROUNDS = 10;
 const MONGO_URI = 'mongodb://localhost:27017/final-sprint';
 const app = express();
 expressWs(app);
@@ -47,11 +47,25 @@ app.get('/', async (request, response) => {
 });
 
 app.get('/login', async (request, response) => {
-    
+    const error = request.query.error || null;
+    response.render("login", { error });
 });
 
 app.post('/login', async (request, response) => {
-    
+    const {email, password} = request.body;
+    const user = USERS.find((user) => user.email === email);
+
+    if (!!user && bcrypt.compareSync(password, user.password)) {
+        request.session.username = user.username;
+        request.session.role = user.role;
+        request.session.email = user.email;
+        return response.redirect("/");
+    }
+
+    // Error message:
+    return response.status(400).render("login", { 
+        error: "ERROR: Invalid or Incorrect Email or Password." 
+    });
 });
 
 app.get('/signup', async (request, response) => {
