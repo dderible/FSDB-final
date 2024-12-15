@@ -52,19 +52,18 @@ app.get('/login', async (request, response) => {
 });
 
 app.post('/login', async (request, response) => {
-    const {email, password} = request.body;
-    const user = USERS.find((user) => user.email === email);
+    const {password} = request.body;
+    const user = USERS.find((user) => user.username === username);
 
     if (!!user && bcrypt.compareSync(password, user.password)) {
         request.session.username = user.username;
         request.session.role = user.role;
-        request.session.email = user.email;
         return response.redirect("/");
     }
 
     // Error message:
     return response.status(400).render("login", { 
-        error: "ERROR: Invalid or Incorrect Email or Password." 
+        error: "ERROR: Invalid or Incorrect Username or Password." 
     });
 });
 
@@ -78,15 +77,12 @@ app.get('/signup', async (request, response) => {
 
 app.post("/signup", (request, response) => {
     const username = request.body.username;
-    const email = request.body.email;
     const newPassword = request.body.password;
     const newID = Math.max(...USERS.map(user => user.id)) + 1;
     const newUser = {
         id: newID,
         username: username,
-        email: email,
         password: bcrypt.hashSync(newPassword, SALT_ROUNDS),
-        role: "user"
     }
 
     // Error messages:
@@ -94,12 +90,8 @@ app.post("/signup", (request, response) => {
         return response.status(400).render("signup", {
             error: "ERROR: Username has already been registered.",
         });
-    } else if (USERS.find((user) => user.email === email)) {
-        return response.status(400).render("signup", {
-            error: "ERROR: Email has already been registered.",
-        });
     }
-    
+
     USERS.push(newUser)
     console.log(USERS)
     console.log("success");
