@@ -4,6 +4,8 @@ const path = require('path');
 const mongoose = require('mongoose');
 const session = require('express-session');
 const bcrypt = require('bcrypt');
+const Users = require("./schemas/users");
+const Polls = require("./schemas/polls");
 
 const PORT = 3000;
 const SALT_ROUNDS = 10;
@@ -55,19 +57,20 @@ app.get('/login', async (request, response) => {
 });
 
 app.post('/login', async (request, response) => {
-    const {password} = request.body;
-    const user = USERS.find((user) => user.username === username);
+    const {username, password} = request.body;
+    try {
+        const user = await User.findOne({username: username});
+        if (!user || !(await bcrypt.compare(password, user.password))) {
+            return response.render("login", { errorMessage: "ERROR: Invalid Information." });
+          }
+          const verifyPass = bcrypt.compareSync(password, user.password);
 
-    if (!!user && bcrypt.compareSync(password, user.password)) {
-        request.session.username = user.username;
-        request.session.role = user.role;
-        return response.redirect("/");
+        if (!verifyPass) {
+            return response.render("login", {errorMessage: "ERROR: Invalid Information."})
+        }
+    } catch (error) {
+        response.render("login", {errorMessage: "ERROR: Unable to verify login information."})
     }
-
-    // Error message:
-    return response.status(400).render("login", { 
-        error: "ERROR: Invalid or Incorrect Username or Password." 
-    });
 });
 
 app.get('/signup', async (request, response) => {
@@ -79,26 +82,14 @@ app.get('/signup', async (request, response) => {
 });
 
 app.post("/signup", (request, response) => {
-    const username = request.body.username;
-    const newPassword = request.body.password;
-    const newID = Math.max(...USERS.map(user => user.id)) + 1;
-    const newUser = {
-        id: newID,
-        username: username,
-        password: bcrypt.hashSync(newPassword, SALT_ROUNDS),
+    const {username, password} = request.body;
+    try {
+        const hashPass = bcrypt.hashSync(password, SALT_ROUNDS);
+        const user = new User({ username, password: hashedPassword });
+        await.user.save();
+    } catch (error) {
+        response.render("signup", { errorMessage: "ERROR: Unable to verify signup information." });
     }
-
-    // Error messages:
-    if (USERS.find((user) => user.username === username)) {
-        return response.status(400).render("signup", {
-            error: "ERROR: Username has already been registered.",
-        });
-    }
-
-    USERS.push(newUser)
-    console.log(USERS)
-    console.log("success");
-    response.redirect("/");
 });
 
 app.post("/logout", (request, response) => {
