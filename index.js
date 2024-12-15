@@ -102,14 +102,13 @@ app.get('/dashboard', async (request, response) => {
         return response.redirect('/');
     }
 
-    //TODO: Fix the polls, this should contain all polls that are active. I'd recommend taking a look at the
-    //authenticatedIndex template to see how it expects polls to be represented
-    return response.render('index/authenticatedIndex', { polls: [] });
+    const polls = await Polls.find();
+    return response.render('index/authenticatedIndex', { polls });
 });
 
 app.get('/profile', async (request, response) => {
-    if (!request.session.user) {
-        return response.redirect("/login");
+    if (!request.session.user?.id) {
+        return response.redirect("/");
     }
 });
 
@@ -154,7 +153,9 @@ mongoose.connect(MONGO_URI)
  */
 async function onCreateNewPoll(question, pollOptions) {
     try {
-        //TODO: Save the new poll to MongoDB
+        const poll = new Polls({ question, options: pollOptions });
+        await poll.save();
+
     }
     catch (error) {
         console.error(error);
@@ -177,9 +178,19 @@ async function onCreateNewPoll(question, pollOptions) {
  */
 async function onNewVote(pollId, selectedOption) {
     try {
-        
+        const poll = await Polls.findById(pollId);
+        if (!poll) {
+            console.log("ERROR: Poll unknown.")
+            return null;
+        }
+
+        const option = poll.options.find((choice) => choice.answer === selectedOption);
+        if(option){
+            option.votes+=1;
+            await poll.save();
+        }
     }
     catch (error) {
-        console.error('Error updating poll:', error);
+        console.error('ERROR: Error updating poll');
     }
 }
