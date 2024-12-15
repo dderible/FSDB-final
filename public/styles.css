@@ -68,6 +68,14 @@ body {
     margin-top: 20px;
 }
 
+.main-content .header {
+    display: flex;
+    flex-direction: row;
+    gap: 20px;
+    margin-top: 20px;
+    margin-left: auto;
+}
+
 .action-button {
     background: #F6F6F6;
     color: #5D8EFB;
