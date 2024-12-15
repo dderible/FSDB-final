@@ -110,7 +110,17 @@ app.get('/profile', async (request, response) => {
     if (!request.session.user?.id) {
         return response.redirect("/");
     }
-});
+    try {
+        const username = request.session.user.username;
+        const pollVotes = await Poll.find({ voters: username })
+        const pollVoteCount = pollsVoted.length;
+        return response.render("profile", { name: username, pollVoteCount: pollVotedCount, });
+        } catch (error) {
+          console.error("ERROR: Unable to load profile information.", error);
+          return response.render("profile", {
+          });
+        }
+      });
 
 app.get('/createPoll', async (request, response) => {
     if (!request.session.user?.id) {
