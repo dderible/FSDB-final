@@ -24,6 +24,12 @@
                 </form>
             </li>
         <% }) %>
+        <% } else { %>
+            <p>No polls active. Start polling today!</p>
+            <form action="/createPoll" method="GET">
+                <button type="submit">Create Poll</button>
+            </form>
+            <% }%>
     </ul>
 </div>
 <script src="/frontend.js" type="application/javascript"></script>
