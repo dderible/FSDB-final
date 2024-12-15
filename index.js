@@ -47,8 +47,11 @@ app.get('/', async (request, response) => {
 });
 
 app.get('/login', async (request, response) => {
-    const error = request.query.error || null;
-    response.render("login", { error });
+    if (request.session.user?.id) {
+    return response.redirect('/dashboard');
+    }
+
+    response.render("login")
 });
 
 app.post('/login', async (request, response) => {
@@ -114,7 +117,9 @@ app.get('/dashboard', async (request, response) => {
 });
 
 app.get('/profile', async (request, response) => {
-    
+    if (!request.session.user) {
+        return response.redirect("/login");
+    }
 });
 
 app.get('/createPoll', async (request, response) => {
@@ -126,12 +131,23 @@ app.get('/createPoll', async (request, response) => {
 });
 
 // Poll creation
+app.get('/createPoll', async (request, response) => {
+    if (!request.session.user?.id) {
+        return response.redirect('/');
+    }
+
+    return response.render('createPoll', {session: request.session})
+});
+
 app.post('/createPoll', async (request, response) => {
     const { question, options } = request.body;
     const formattedOptions = Object.values(options).map((option) => ({ answer: option, votes: 0 }));
 
-    const pollCreationError = onCreateNewPoll(question, formattedOptions);
-    //TODO: If an error occurs, what should we do?
+    const newPoll = onCreateNewPoll(question, formattedOptions);
+    if(!newPoll){
+        response.render("createPoll", {errorMessage: "ERROR: Poll could not be created.", session: request.session})
+    }
+    response.render("createPoll", {successMessage: "Poll Successfully Created!", session: request.session})
 });
 
 mongoose.connect(MONGO_URI)
