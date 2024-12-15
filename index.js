@@ -29,14 +29,30 @@ let connectedClients = [];
 
 app.ws('/ws', (socket, request) => {
     connectedClients.push(socket);
-
     socket.on('message', async (message) => {
-        const data = JSON.parse(message);
-        
-    });
+        try {
+            const data = JSON.parse(message);
+            if (data.type === "vote") {
+                await onNewVote(data.pollId, data.option);
+                const pollUpdate = await onNewVote(pollId, option);
+
+        if (pollUpdate) {
+          connectedClients.forEach((client) => {
+            if (client.readyState === 1) {
+              client.send(
+                JSON.stringify({ type: "poll-update", poll: pollUpdate })
+            );
+            }
+        });
+        }
+    }
+    } catch (error) {
+  console.error("ERROR: Websocket Error.", error);
+    }
+});
 
     socket.on('close', async (message) => {
-        
+        connectedClients = connectedClients.filter((client) => client !== socket);
     });
 });
 
@@ -59,7 +75,7 @@ app.get('/login', async (request, response) => {
 app.post('/login', async (request, response) => {
     const {username, password} = request.body;
     try {
-        const user = await User.findOne({username: username});
+        const user = await Users.findOne({username: username});
         if (!user || !(await bcrypt.compare(password, user.password))) {
             return response.render("login", { errorMessage: "ERROR: Invalid Information." });
           }
@@ -85,7 +101,7 @@ app.post("/signup", (request, response) => {
     const {username, password} = request.body;
     try {
         const hashPass = bcrypt.hashSync(password, SALT_ROUNDS);
-        const user = new User({ username, password: hashedPassword });
+        const user = new Users({ username, password: hashedPassword });
         await.user.save();
     } catch (error) {
         response.render("signup", { errorMessage: "ERROR: Unable to verify signup information." });
@@ -112,9 +128,9 @@ app.get('/profile', async (request, response) => {
     }
     try {
         const username = request.session.user.username;
-        const pollVotes = await Poll.find({ voters: username })
-        const pollVoteCount = pollsVoted.length;
-        return response.render("profile", { name: username, pollVoteCount: pollVotedCount, });
+        const pollVotes = await Polls.find({ voters: username })
+        const pollVoteCount = pollVotes.length;
+        return response.render("profile", { name: username, pollVoteCount: pollVoteCount, });
         } catch (error) {
           console.error("ERROR: Unable to load profile information.", error);
           return response.render("profile", {

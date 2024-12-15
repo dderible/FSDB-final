@@ -17,7 +17,7 @@ socket.addEventListener('message', (event) => {
             console.log("ERROR: Input could not be verified.", data.type);
         }
     } catch (error) {
-        console.error("ERROR: ", err);
+        console.error("ERROR: Websocket Error.", err);
     }
 });
 
