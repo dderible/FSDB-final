@@ -22,11 +22,11 @@ socket.addEventListener('message', (event) => {
 });
 
 socket.onerror = (error) => {
-    console.error("WebSocket input could not be verified.", error);
+    console.error("ERROR: WebSocket input could not be verified.", error);
   };
   
   socket.onclose = () => {
-    console.warn("WebSocket link terminated successfully.");
+    console.warn("SUCCESS: WebSocket link terminated successfully.");
   };
 
 
